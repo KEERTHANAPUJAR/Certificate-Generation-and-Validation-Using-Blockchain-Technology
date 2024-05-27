@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Certificate Generation and Validation</title>
+</head>
+<body>
+    <h1>Certificate Generation and Validation</h1>
+    <form action="/generate_certificate" method="POST">
+        <label for="name">Name:</label>
+        <input type="text" name="name" required>
+        <br>
+        <label for="course">Course:</label>
+        <input type="text" name="course" required>
+        <br>
+        <input type="submit" value="Generate Certificate">
+    </form>
+    <br>
+    <form action="/mine_block" method="GET">
+        <input type="submit" value="Mine Block">
+    </form>
+    <br>
+    <h2>Check Certificate:</h2>
+    <form action="/check_certificate" method="GET">
+        <label for="name">Name:</label>
+        <input type="text" name="name" required>
+        <br>
+        <label for="course">Course:</label>
+        <input type="text" name="course" required>
+        <br>
+        <input type="submit" value="Check Certificate">
+    </form>
+</body>
+</html>
