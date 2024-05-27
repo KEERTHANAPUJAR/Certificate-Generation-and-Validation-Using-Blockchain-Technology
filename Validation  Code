@@ -1,0 +1,78 @@
+from flask import Flask, render_template, request, redirect, url_for, jsonify
+import hashlib
+import json
+from time import time
+
+app = Flask(__name__)
+
+class Blockchain:
+    def __init__(self):
+        self.chain = []
+        self.current_certificates = []
+        self.create_block(previous_hash='0')
+
+    def create_block(self, previous_hash):
+        block = {
+            'index': len(self.chain) + 1,
+            'timestamp': time(),
+            'certificates': self.current_certificates,
+            'previous_hash': previous_hash,
+        }
+        self.current_certificates = []
+        self.chain.append(block)
+
+    def add_certificate(self, certificate):
+        self.current_certificates.append(certificate)
+
+    def hash_block(self, block):
+        return hashlib.sha256(json.dumps(block, sort_keys=True).encode()).hexdigest()
+
+    def get_previous_block(self):
+        return self.chain[-1]
+
+    def is_chain_valid(self):
+        for i in range(1, len(self.chain)):
+            current_block = self.chain[i]
+            previous_block = self.chain[i - 1]
+            if current_block['previous_hash'] != self.hash_block(previous_block):
+                return False
+        return True
+
+blockchain = Blockchain()
+
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+@app.route('/generate_certificate', methods=['POST'])
+def generate_certificate():
+    name = request.form['name']
+    course = request.form['course']
+    certificate_data = {
+        'name': name,
+        'course': course,
+    }
+    blockchain.add_certificate(certificate_data)
+    return redirect(url_for('index'))
+
+@app.route('/mine_block', methods=['GET'])
+def mine_block():
+    previous_block = blockchain.get_previous_block()
+    previous_hash = blockchain.hash_block(previous_block)
+    blockchain.create_block(previous_hash)
+    return redirect(url_for('index'))
+
+@app.route('/check_certificate', methods=['GET'])
+def check_certificate():
+    certificate_data = {
+        'name': request.args.get('name'),
+        'course': request.args.get('course'),
+    }
+    for block in blockchain.chain:
+        for certificate in block['certificates']:
+            if certificate == certificate_data:
+                return jsonify({'message': 'Certificate is valid.'})
+    return jsonify({'message': 'Certificate not found or invalid.'})
+
+if __name__ == '__main__':
+    app.run(debug=True)
