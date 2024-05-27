@@ -1,0 +1,52 @@
+import hashlib
+import time
+
+class Certificate:
+    def __init__(self, certificate_data, issuer):
+        self.certificate_data = certificate_data
+        self.issuer = issuer
+        self.timestamp = time.time()
+        self.previous_hash = None
+        self.hash = self.calculate_hash()
+
+    def calculate_hash(self):
+        data = f"{self.certificate_data}{self.issuer}{self.timestamp}{self.previous_hash}"
+        return hashlib.sha256(data.encode()).hexdigest()
+
+class CertificateChain:
+    def __init__(self):
+        self.chain = [self.create_genesis_certificate()]
+
+    def create_genesis_certificate(self):
+        return Certificate("Genesis Certificate", "Admin")
+
+    def add_certificate(self, certificate_data, issuer):
+        previous_certificate = self.chain[-1]
+        new_certificate = Certificate(certificate_data, issuer)
+        new_certificate.previous_hash = previous_certificate.hash
+        self.chain.append(new_certificate)
+
+    def validate_chain(self):
+        for i in range(1, len(self.chain)):
+            current_certificate = self.chain[i]
+            previous_certificate = self.chain[i - 1]
+
+            if current_certificate.hash != current_certificate.calculate_hash():
+                return False
+
+            if current_certificate.previous_hash != previous_certificate.hash:
+                return False
+
+        return True
+
+# Usage
+if __name__ == "__main__":
+    certificate_chain = CertificateChain()
+
+    certificate_chain.add_certificate("John Doe - Certificate of Excellence", "University")
+    certificate_chain.add_certificate("Alice Smith - Certificate of Achievement", "Company")
+
+    # Tamper with a certificate (for testing purposes)
+    certificate_chain.chain[1].certificate_data = "Eve Mallory - Tampered Certificate"
+
+    print("Certificate Chain is valid:", certificate_chain.validate_chain())
